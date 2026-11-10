@@ -1,0 +1,214 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(storeId) {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/stores/$(storeId)) &&
+         get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.ownerId == request.auth.uid)
+      );
+    }
+
+    function getStaffDoc(storeId) {
+      return get(/databases/$(database)/documents/stores/$(storeId)/staff/$(request.auth.uid));
+    }
+
+    function isApprovedStaff(storeId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/stores/$(storeId)/staff/$(request.auth.uid)) &&
+        getStaffDoc(storeId).data.isActive == true;
+    }
+
+    function hasPermission(storeId, perm) {
+      return isOwner(storeId) || (
+        isApprovedStaff(storeId) && (
+          getStaffDoc(storeId).data.role == "Admin" ||
+          getStaffDoc(storeId).data.role == "Manager" ||
+          (perm in getStaffDoc(storeId).data.permissions)
+        )
+      );
+    }
+
+    // --- Entity Validation Functions ---
+    function isValidStore(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.ownerId is string && data.ownerId.size() > 0 &&
+             (!('phone' in data) || data.phone is string) &&
+             (!('email' in data) || data.email is string);
+    }
+
+    function isValidStaff(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.role is string &&
+             data.isActive is bool &&
+             (!('permissions' in data) || data.permissions is list);
+    }
+
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.sellPrice is number &&
+             (!('stockQty' in data) || data.stockQty is number) &&
+             (!('buyPrice' in data) || data.buyPrice is number);
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() > 0;
+    }
+
+    function isValidSale(data) {
+      return data.totalAmount is number &&
+             (!('paidAmount' in data) || data.paidAmount is number);
+    }
+
+    function isValidPurchase(data) {
+      return data.totalAmount is number;
+    }
+
+    function isValidCustomer(data) {
+      return data.name is string && data.name.size() > 0;
+    }
+
+    function isValidSupplier(data) {
+      return data.name is string && data.name.size() > 0;
+    }
+
+    function isValidPayment(data) {
+      return data.amount is number && data.amount > 0;
+    }
+
+    function isValidExpense(data) {
+      return data.amount is number && data.category is string;
+    }
+
+    function isValidBankAccount(data) {
+      return data.accountName is string && data.accountName.size() > 0;
+    }
+
+    function isValidOtherIncome(data) {
+      return data.title is string && data.amount is number;
+    }
+
+    function isValidReminder(data) {
+      return data.title is string && data.title.size() > 0;
+    }
+
+    function isValidSetting(data) {
+      return data.key is string;
+    }
+
+    // --- Store Root Document ---
+    match /stores/{storeId} {
+      allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid && isValidStore(request.resource.data);
+      allow update: if isOwner(storeId) && isValidStore(request.resource.data);
+      allow delete: if isOwner(storeId);
+
+      // Staff subcollection
+      match /staff/{staffId} {
+        allow read: if isOwner(storeId) || (isAuthenticated() && request.auth.uid == staffId);
+        allow create, update: if isOwner(storeId) && isValidStaff(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Products
+      match /products/{productId} {
+        allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+        allow create, update: if hasPermission(storeId, "manage_stock") && isValidProduct(request.resource.data);
+        allow delete: if hasPermission(storeId, "manage_stock");
+      }
+
+      // Categories
+      match /categories/{categoryId} {
+        allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+        allow create, update: if hasPermission(storeId, "manage_stock") && isValidCategory(request.resource.data);
+        allow delete: if hasPermission(storeId, "manage_stock");
+      }
+
+      // Sales
+      match /sales/{saleId} {
+        allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+        allow create: if hasPermission(storeId, "create_sale") && isValidSale(request.resource.data);
+        allow update: if isOwner(storeId) && isValidSale(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Purchases
+      match /purchases/{purchaseId} {
+        allow read: if isOwner(storeId) || hasPermission(storeId, "manage_suppliers");
+        allow create, update: if hasPermission(storeId, "manage_suppliers") && isValidPurchase(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Customers
+      match /customers/{customerId} {
+        allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+        allow create, update: if hasPermission(storeId, "manage_customers") && isValidCustomer(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Suppliers
+      match /suppliers/{supplierId} {
+        allow read: if isOwner(storeId) || hasPermission(storeId, "manage_suppliers");
+        allow create, update: if hasPermission(storeId, "manage_suppliers") && isValidSupplier(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Customer Payments
+      match /customer_payments/{paymentId} {
+        allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+        allow create: if (hasPermission(storeId, "create_sale") || hasPermission(storeId, "manage_customers")) && isValidPayment(request.resource.data);
+        allow update, delete: if isOwner(storeId);
+      }
+
+      // Supplier Payments
+      match /supplier_payments/{paymentId} {
+        allow read: if isOwner(storeId) || hasPermission(storeId, "manage_suppliers");
+        allow create: if hasPermission(storeId, "manage_suppliers") && isValidPayment(request.resource.data);
+        allow update, delete: if isOwner(storeId);
+      }
+
+      // Expenses
+      match /expenses/{expenseId} {
+        allow read: if isOwner(storeId) || hasPermission(storeId, "manage_expenses");
+        allow create, update: if hasPermission(storeId, "manage_expenses") && isValidExpense(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Bank Accounts
+      match /bank_accounts/{accountId} {
+        allow read: if isOwner(storeId) || (isApprovedStaff(storeId) && getStaffDoc(storeId).data.role == "Accountant");
+        allow create, update, delete: if isOwner(storeId) && isValidBankAccount(request.resource.data);
+      }
+
+      // Other Incomes
+      match /other_incomes/{incomeId} {
+        allow read: if isOwner(storeId) || hasPermission(storeId, "manage_expenses");
+        allow create, update: if isOwner(storeId) && isValidOtherIncome(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Reminders
+      match /reminders/{reminderId} {
+        allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+        allow create, update: if isApprovedStaff(storeId) && isValidReminder(request.resource.data);
+        allow delete: if isOwner(storeId);
+      }
+
+      // Settings
+      match /settings/{settingId} {
+        allow read: if isOwner(storeId) || isApprovedStaff(storeId);
+        allow create, update, delete: if isOwner(storeId) && isValidSetting(request.resource.data);
+      }
+    }
+
+    // Default deny for everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

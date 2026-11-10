@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isStoreOwner(storeId) {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/stores/$(storeId)).data.ownerId == request.auth.uid;
+    }
+
+    function isApprovedStaff(storeId) {
+      return isAuthenticated() &&
+        firestore.exists(/databases/(default)/documents/stores/$(storeId)/staff/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/stores/$(storeId)/staff/$(request.auth.uid)).data.isActive == true;
+    }
+
+    // Stores media path: stores/{storeId}/{allPaths=**}
+    match /stores/{storeId}/{allPaths=**} {
+      allow read: if isStoreOwner(storeId) || isApprovedStaff(storeId);
+      allow write: if isStoreOwner(storeId) || isApprovedStaff(storeId);
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

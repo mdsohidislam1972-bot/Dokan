@@ -1,0 +1,6 @@
+{
+  "name": "Dokan",
+  "description": "Production POS and business inventory management app with Firebase Authentication, Firestore, Cloud Storage, offline synchronization, and zero-data-loss migration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,303 @@
+{
+  "entities": {
+    "Store": {
+      "title": "Store",
+      "description": "Business profile representing a shop or retail store",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string", "description": "Auth UID of the store owner" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "businessType": { "type": "string" },
+        "category": { "type": "string" },
+        "email": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "logoUri": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "name"]
+    },
+    "StaffMember": {
+      "title": "StaffMember",
+      "description": "Approved staff member associated with the store",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "authUid": { "type": "string" },
+        "email": { "type": "string" },
+        "salary": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "permissions": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["storeId", "name", "role", "isActive"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Retail inventory item",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "buyPrice": { "type": "number" },
+        "sellPrice": { "type": "number" },
+        "stockQty": { "type": "number" },
+        "unit": { "type": "string" },
+        "barcode": { "type": "string" },
+        "location": { "type": "string" },
+        "wholesalePrice": { "type": "number" },
+        "mrp": { "type": "number" },
+        "photoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["storeId", "name", "sellPrice"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product classification category",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "name": { "type": "string" },
+        "iconName": { "type": "string" },
+        "colorHex": { "type": "string" },
+        "isVisible": { "type": "boolean" }
+      },
+      "required": ["storeId", "name"]
+    },
+    "SaleOrder": {
+      "title": "SaleOrder",
+      "description": "Completed customer sale or POS invoice",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "customerId": { "type": "number" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "itemsJson": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "discount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "dueAmount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "notes": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["storeId", "totalAmount"]
+    },
+    "PurchaseRecord": {
+      "title": "PurchaseRecord",
+      "description": "Supplier purchase order",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "supplierId": { "type": "number" },
+        "supplierName": { "type": "string" },
+        "itemsJson": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "dueAmount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "billPhotoUrl": { "type": "string" },
+        "date": { "type": "number" }
+      },
+      "required": ["storeId", "totalAmount"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Retail store customer record",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "totalDue": { "type": "number" },
+        "category": { "type": "string" }
+      },
+      "required": ["storeId", "name"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Product vendor/supplier record",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "totalOwed": { "type": "number" },
+        "category": { "type": "string" }
+      },
+      "required": ["storeId", "name"]
+    },
+    "CustomerPayment": {
+      "title": "CustomerPayment",
+      "description": "Customer due/baki payment transaction",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "customerId": { "type": "number" },
+        "amount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "note": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["storeId", "customerId", "amount"]
+    },
+    "SupplierPayment": {
+      "title": "SupplierPayment",
+      "description": "Supplier balance payment transaction",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "supplierId": { "type": "number" },
+        "amount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "note": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["storeId", "supplierId", "amount"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Daily store operational expense",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "note": { "type": "string" },
+        "date": { "type": "number" }
+      },
+      "required": ["storeId", "amount", "category"]
+    },
+    "BankAccount": {
+      "title": "BankAccount",
+      "description": "Store bank or mobile financial service account",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "accountName": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "bankName": { "type": "string" },
+        "balance": { "type": "number" },
+        "accountType": { "type": "string" }
+      },
+      "required": ["storeId", "accountName"]
+    },
+    "OtherIncome": {
+      "title": "OtherIncome",
+      "description": "Non-sale store revenue",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "title": { "type": "string" },
+        "amount": { "type": "number" },
+        "source": { "type": "string" },
+        "date": { "type": "number" }
+      },
+      "required": ["storeId", "title", "amount"]
+    },
+    "AppReminder": {
+      "title": "AppReminder",
+      "description": "Task or due payment alert",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "number" },
+        "isCompleted": { "type": "boolean" },
+        "priority": { "type": "string" }
+      },
+      "required": ["storeId", "title"]
+    },
+    "StoreSetting": {
+      "title": "StoreSetting",
+      "description": "Key-value configuration for store preferences",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string" },
+        "key": { "type": "string" },
+        "value": { "type": "string" }
+      },
+      "required": ["storeId", "key"]
+    }
+  },
+  "firestore": {
+    "/stores/{storeId}": {
+      "schema": { "$ref": "#/entities/Store" },
+      "description": "Stores document root"
+    },
+    "/stores/{storeId}/staff/{staffId}": {
+      "schema": { "$ref": "#/entities/StaffMember" },
+      "description": "Staff list for store"
+    },
+    "/stores/{storeId}/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Store products collection"
+    },
+    "/stores/{storeId}/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Store categories collection"
+    },
+    "/stores/{storeId}/sales/{saleId}": {
+      "schema": { "$ref": "#/entities/SaleOrder" },
+      "description": "Sales records"
+    },
+    "/stores/{storeId}/purchases/{purchaseId}": {
+      "schema": { "$ref": "#/entities/PurchaseRecord" },
+      "description": "Purchases records"
+    },
+    "/stores/{storeId}/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "Customer list"
+    },
+    "/stores/{storeId}/suppliers/{supplierId}": {
+      "schema": { "$ref": "#/entities/Supplier" },
+      "description": "Supplier list"
+    },
+    "/stores/{storeId}/customer_payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/CustomerPayment" },
+      "description": "Customer payments"
+    },
+    "/stores/{storeId}/supplier_payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/SupplierPayment" },
+      "description": "Supplier payments"
+    },
+    "/stores/{storeId}/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Expense entries"
+    },
+    "/stores/{storeId}/bank_accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/BankAccount" },
+      "description": "Bank and wallet accounts"
+    },
+    "/stores/{storeId}/other_incomes/{incomeId}": {
+      "schema": { "$ref": "#/entities/OtherIncome" },
+      "description": "Other income entries"
+    },
+    "/stores/{storeId}/reminders/{reminderId}": {
+      "schema": { "$ref": "#/entities/AppReminder" },
+      "description": "Store reminders"
+    },
+    "/stores/{storeId}/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/StoreSetting" },
+      "description": "Store settings"
+    }
+  }
+}
